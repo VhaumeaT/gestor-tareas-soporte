@@ -1,0 +1,2034 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-50">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Tareas y Requerimientos</title>
+    <!-- Tailwind CSS CDN Estándar -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS (XLSX) CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link rel="icon" href="data:,">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brandHeader: '#1e293b',
+                        brandPrimary: '#2563eb',
+                        brandAccent: '#3b82f6',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+
+<body class="h-full text-slate-800 font-sans antialiased bg-slate-100/70 flex flex-col">
+
+    <header class="bg-brandHeader text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-blue-500/20 rounded-xl text-white border border-blue-400/30">
+                        <i class="fa-solid fa-list-check text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-extrabold text-lg leading-tight tracking-wide text-white">Gestor de Tareas y
+                            Requerimientos</h1>
+                        <p class="text-xs text-blue-200 font-medium">Valentina Flores · Panel de Control</p>
+                    </div>
+                </div>
+                <div
+                    class="flex items-center space-x-2 text-xs bg-black/20 px-3.5 py-1.5 rounded-full border border-white/10 text-slate-200">
+                    <i class="fa-regular fa-clock text-amber-400"></i>
+                    <span id="headerClock">--/--/---- --:--:--</span>
+                </div>
+            </div>
+
+            <nav
+                class="flex space-x-2 border-t border-slate-700 pt-1 pb-2 overflow-x-auto text-xs font-semibold custom-scrollbar">
+                <button id="tab-nueva" onclick="switchTab('nueva')"
+                    class="tab-btn px-4 py-2 rounded-lg transition-all flex items-center space-x-2 bg-blue-600 text-white shadow-sm">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>Nueva Tarea</span>
+                </button>
+                <button id="tab-dashboard" onclick="switchTab('dashboard')"
+                    class="tab-btn px-4 py-2 rounded-lg transition-all flex items-center space-x-2 text-slate-300 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard & Métricas</span>
+                </button>
+                <button id="tab-historial" onclick="switchTab('historial')"
+                    class="tab-btn px-4 py-2 rounded-lg transition-all flex items-center space-x-2 text-slate-300 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-rectangle-list"></i>
+                    <span>Historial de Tareas</span>
+                </button>
+                <button id="tab-referencia" onclick="switchTab('referencia')"
+                    class="tab-btn px-4 py-2 rounded-lg transition-all flex items-center space-x-2 text-slate-300 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                    <span>Configuración</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+        <!-- View 1: Nueva Tarea -->
+        <section id="view-nueva" class="view-content block space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 md:p-8 space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900">Registrar Nuevo Requerimiento</h2>
+                        <p class="text-xs text-slate-500">Selecciona el cliente para autocompletar la ciudad e indicador
+                            correspondiente.</p>
+                    </div>
+                    <div>
+                        <span
+                            class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-100">
+                            <i class="fa-solid fa-bolt text-blue-600"></i> Formulario Inteligente
+                        </span>
+                    </div>
+                </div>
+
+                <!-- AI AutoFill Box -->
+                <div class="bg-blue-50/70 border border-blue-100 p-5 rounded-2xl space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="p-2 bg-blue-600 text-white rounded-lg text-xs shadow-sm">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            </span>
+                            <span class="font-bold text-slate-800 text-xs sm:text-sm">Asistente IA · Extracción Rápida
+                                de Solicitud</span>
+                        </div>
+                        <span
+                            class="text-[11px] bg-blue-100 text-blue-700 font-bold px-2.5 py-1 rounded-full border border-blue-200 flex items-center gap-1">
+                            <i class="fa-solid fa-bolt"></i> Auto-Fill Activo
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        Pega o escribe cualquier mensaje enviado por el usuario y la IA autocompletará el cliente,
+                        ciudad, plataforma, indicador, tipo y descripción.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-2.5">
+                        <textarea id="inputIAPrompt" rows="2" placeholder="Ej: iquique 3 asignar boletero..."
+                            class="flex-1 px-4 py-2.5 text-xs sm:text-sm rounded-xl text-slate-900 bg-white border border-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none shadow-sm"></textarea>
+                        <button type="button" onclick="procesarIAAutoFill()"
+                            class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs sm:text-sm transition shadow-md flex items-center justify-center space-x-2 shrink-0 self-end sm:self-auto">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Autocompletar</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Task Form -->
+                <form id="formTarea" onsubmit="guardarTarea(event)" class="space-y-6 pt-2">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="relative">
+                            <label for="inputClienteSearch"
+                                class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                Cliente <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="text" id="inputClienteSearch" onfocus="mostrarClientesDropdown(true)"
+                                    oninput="filtrarClientesDropdown()" placeholder="Escribe para buscar cliente..."
+                                    autocomplete="off"
+                                    class="w-full pl-9 pr-8 py-2.5 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <i
+                                    class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
+                                <button type="button" onclick="limpiarClienteSeleccionado()"
+                                    class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs p-1">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                            <div id="dropdownClientes"
+                                class="hidden absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto custom-scrollbar">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="inputCiudad"
+                                class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                Ciudad <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="text" id="inputCiudad" readonly placeholder="Auto por cliente"
+                                    class="w-full pl-9 pr-3 py-2.5 bg-slate-100/80 border border-slate-200 rounded-xl text-xs text-slate-700 font-semibold cursor-not-allowed">
+                                <i class="fa-solid fa-city absolute left-3 top-3 text-slate-400 text-xs"></i>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="selectPlataforma"
+                                class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                Plataforma <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <select id="selectPlataforma"
+                                    class="w-full pl-9 pr-8 py-2.5 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none cursor-pointer">
+                                </select>
+                                <i class="fa-solid fa-layer-group absolute left-3 top-3 text-slate-400 text-xs"></i>
+                                <i
+                                    class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-slate-400 text-xs pointer-events-none"></i>
+                            </div>
+                        </div>
+
+                        <div class="relative">
+                            <label for="inputIndicadorSearch"
+                                class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                Indicador <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="text" id="inputIndicadorSearch" onfocus="mostrarIndicadoresDropdown(true)"
+                                    oninput="filtrarIndicadoresDropdown()"
+                                    placeholder="Escribe para buscar indicador..." autocomplete="off"
+                                    class="w-full pl-9 pr-8 py-2.5 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <i class="fa-solid fa-list-check absolute left-3 top-3 text-slate-400 text-xs"></i>
+                                <button type="button" onclick="limpiarIndicadorSeleccionado()"
+                                    class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs p-1">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                            <div id="dropdownIndicadores"
+                                class="hidden absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto custom-scrollbar">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="selectTipo"
+                                class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                Tipo de Requerimiento <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <select id="selectTipo"
+                                    class="w-full pl-9 pr-8 py-2.5 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none cursor-pointer">
+                                    <option value="Requerimiento">Requerimiento</option>
+                                    <option value="Incidencia">Incidencia</option>
+                                </select>
+                                <i class="fa-solid fa-tag absolute left-3 top-3 text-slate-400 text-xs"></i>
+                                <i
+                                    class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-slate-400 text-xs pointer-events-none"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="inputObservacion"
+                            class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                            Descripción del Requerimiento <span class="text-rose-500">*</span>
+                        </label>
+                        <textarea id="inputObservacion" rows="3" required
+                            placeholder="Describe los detalles del requerimiento o soporte brindado..."
+                            class="w-full p-3 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none shadow-sm"></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-end space-x-3 pt-2">
+                        <button type="button" onclick="limpiarFormulario()"
+                            class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition flex items-center space-x-2">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span>Limpiar Formulario</span>
+                        </button>
+                        <button type="submit"
+                            class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center space-x-2">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>Guardar Tarea</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- View 2: Dashboard -->
+        <section id="view-dashboard" class="view-content hidden space-y-5">
+            <div
+                class="bg-[#1e293b] text-white p-4 rounded-2xl shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid fa-headset text-2xl text-blue-400"></i>
+                    <div>
+                        <h2 class="text-base font-bold tracking-wide uppercase">Dashboard de Casos de Soporte</h2>
+                        <p class="text-[10px] text-slate-400">Métricas y análisis global de requerimientos</p>
+                    </div>
+                </div>
+                <div
+                    class="flex items-center space-x-2 text-xs bg-white/10 px-3.5 py-1.5 rounded-lg border border-white/10 text-slate-200">
+                    <i class="fa-regular fa-calendar text-blue-400"></i>
+                    <span id="dashLastUpdate">Última actualización --/--/----</span>
+                </div>
+            </div>
+
+            <!-- Filters Bar Grid -->
+            <div
+                class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                <div class="md:col-span-4 space-y-1">
+                    <span class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Filtro por
+                        Fecha</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="date" id="dashFilterFechaDesde" onchange="actualizarDashboard()"
+                            class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500">
+                        <input type="date" id="dashFilterFechaHasta" onchange="actualizarDashboard()"
+                            class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label for="dashFilterPlataforma"
+                            class="block text-[10px] font-extrabold text-slate-500 mb-1 uppercase">Plataforma</label>
+                        <select id="dashFilterPlataforma" onchange="actualizarDashboard()"
+                            class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
+                            <option value="Todas">Todas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="dashFilterCiudad"
+                            class="block text-[10px] font-extrabold text-slate-500 mb-1 uppercase">Ciudad</label>
+                        <select id="dashFilterCiudad" onchange="actualizarDashboard()"
+                            class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
+                            <option value="Todas">Todas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="dashFilterCliente"
+                            class="block text-[10px] font-extrabold text-slate-500 mb-1 uppercase">Cliente</label>
+                        <select id="dashFilterCliente" onchange="actualizarDashboard()"
+                            class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500">
+                            <option value="Todas">Todas</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Cards Block -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div
+                    class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-3.5 relative overflow-hidden">
+                    <div class="w-1.5 absolute left-0 top-0 bottom-0 bg-[#1e293b]"></div>
+                    <div class="p-3 bg-[#1e293b] text-white rounded-xl shadow-sm">
+                        <i class="fa-solid fa-headset text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Total Casos</p>
+                        <p id="kpiTotalCasos" class="text-2xl font-black text-slate-900">0</p>
+                    </div>
+                </div>
+                <div
+                    class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-3.5 relative overflow-hidden">
+                    <div class="w-1.5 absolute left-0 top-0 bottom-0 bg-purple-600"></div>
+                    <div class="p-3 bg-purple-600 text-white rounded-xl shadow-sm">
+                        <i class="fa-solid fa-city text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Ciudades</p>
+                        <p id="kpiTotalCiudades" class="text-2xl font-black text-slate-900">0</p>
+                    </div>
+                </div>
+                <div
+                    class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-3.5 relative overflow-hidden">
+                    <div class="w-1.5 absolute left-0 top-0 bottom-0 bg-emerald-500"></div>
+                    <div class="p-3 bg-emerald-500 text-white rounded-xl shadow-sm">
+                        <i class="fa-solid fa-server text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Plataformas</p>
+                        <p id="kpiTotalPlataformas" class="text-2xl font-black text-slate-900">0</p>
+                    </div>
+                </div>
+                <div
+                    class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-3.5 relative overflow-hidden">
+                    <div class="w-1.5 absolute left-0 top-0 bottom-0 bg-amber-500"></div>
+                    <div class="p-3 bg-amber-500 text-white rounded-xl shadow-sm">
+                        <i class="fa-solid fa-users text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Clientes</p>
+                        <p id="kpiTotalClientes" class="text-2xl font-black text-slate-900">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Charts Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div
+                    class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-3 flex flex-col justify-between">
+                    <h3 class="text-xs font-extrabold text-blue-900 uppercase tracking-wider border-b pb-2">Total Casos
+                        por Cliente</h3>
+                    <div id="wrapChartClientes" class="h-64 relative overflow-y-auto custom-scrollbar">
+                        <div id="innerChartClientes" style="height: 240px;">
+                            <canvas id="chartClientes"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-3 flex flex-col justify-between">
+                    <h3 class="text-xs font-extrabold text-blue-900 uppercase tracking-wider border-b pb-2">Total Casos
+                        por Ciudad</h3>
+                    <div id="wrapChartCiudades" class="h-64 relative overflow-y-auto custom-scrollbar">
+                        <div id="innerChartCiudades" style="height: 240px;">
+                            <canvas id="chartCiudades"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-3 flex flex-col justify-between">
+                    <h3 class="text-xs font-extrabold text-blue-900 uppercase tracking-wider border-b pb-2">Total Casos
+                        por Plataforma</h3>
+                    <div id="wrapChartPlataformas"
+                        class="h-64 relative overflow-y-auto custom-scrollbar flex items-center justify-center">
+                        <div id="innerChartPlataformas" style="height: 240px; width: 100%;">
+                            <canvas id="chartPlataformas"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-3 flex flex-col justify-between">
+                    <h3 class="text-xs font-extrabold text-blue-900 uppercase tracking-wider border-b pb-2">Total Casos
+                        por Indicador</h3>
+                    <div id="wrapChartIndicadores" class="h-64 relative overflow-y-auto custom-scrollbar">
+                        <div id="innerChartIndicadores" style="height: 240px;">
+                            <canvas id="chartIndicadores"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+                <h3 class="text-xs font-extrabold text-blue-900 uppercase tracking-wider border-b pb-2 text-center">
+                    Total Casos por Mes Año</h3>
+                <div class="h-56 relative">
+                    <canvas id="chartTiempo"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- View 3: Historial -->
+        <section id="view-historial" class="view-content hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">Historial de Registros</h2>
+                        <p class="text-xs text-slate-500">Consulta, edita y exporta los requerimientos finalizados.
+                            <span id="contadorHistorialBadge"
+                                class="ml-2 px-2.5 py-0.5 bg-blue-100 text-blue-700 font-bold rounded-full text-[11px]">Total:
+                                0</span></p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="copiarTablaHistorial()"
+                            class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center space-x-1.5">
+                            <i class="fa-regular fa-copy"></i>
+                            <span>Copiar Tabla</span>
+                        </button>
+                        <button onclick="exportarCSVHistorial()"
+                            class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition flex items-center space-x-1.5 shadow-sm">
+                            <i class="fa-solid fa-file-excel"></i>
+                            <span>Exportar CSV</span>
+                        </button>
+                        <button onclick="abrirModalImportExcelTareas()"
+                            class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition flex items-center space-x-1.5 shadow-sm">
+                            <i class="fa-solid fa-file-import"></i>
+                            <span>Importar Tareas (Excel)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="relative">
+                        <input type="text" id="inputFilterHistorial" oninput="renderTablaHistorial()"
+                            placeholder="Buscar por fecha, cliente, ciudad, indicador o descripción..."
+                            class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                    </div>
+                </div>
+
+                <div class="overflow-auto max-h-[520px] rounded-xl border border-slate-200 custom-scrollbar">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead
+                            class="bg-slate-50 text-slate-600 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+                            <tr>
+                                <th class="p-3 bg-slate-50">ID / Fecha</th>
+                                <th class="p-3 bg-slate-50">Cliente</th>
+                                <th class="p-3 bg-slate-50">Ciudad</th>
+                                <th class="p-3 bg-slate-50">Plataforma</th>
+                                <th class="p-3 bg-slate-50">Indicador</th>
+                                <th class="p-3 bg-slate-50">Tipo</th>
+                                <th class="p-3 bg-slate-50">Descripción</th>
+                                <th class="p-3 bg-slate-50 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyHistorial" class="divide-y divide-slate-200 bg-white">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- View 4: Referencia -->
+        <section id="view-referencia" class="view-content hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">Hoja Referencia (Clientes e Indicadores)</h2>
+                        <p class="text-xs text-slate-500">
+                            Administra los <span id="refTotalClientesCount" class="font-bold text-blue-600">0</span>
+                            clientes, sus ciudades asignadas y los <span id="refTotalIndicadoresCount"
+                                class="font-bold text-blue-600">0</span> indicadores del sistema.
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="abrirModalImportExcelClientes()"
+                            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition flex items-center space-x-1.5 shadow-sm">
+                            <i class="fa-solid fa-file-import"></i>
+                            <span>Importar Clientes (Excel)</span>
+                        </button>
+                        <button onclick="abrirModalAgregarCliente()"
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition flex items-center space-x-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Agregar Cliente</span>
+                        </button>
+                        <button onclick="abrirModalAgregarIndicador()"
+                            class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-xl transition flex items-center space-x-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Agregar Indicador</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex space-x-4 border-b border-slate-200 mb-4">
+                    <button id="subtab-clientes" onclick="switchSubTabReferencia('clientes')"
+                        class="pb-2 text-xs font-bold border-b-2 border-blue-600 text-blue-600 flex items-center space-x-1.5">
+                        <i class="fa-solid fa-users"></i>
+                        <span>Clientes y Ciudades</span>
+                    </button>
+                    <button id="subtab-indicadores" onclick="switchSubTabReferencia('indicadores')"
+                        class="pb-2 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center space-x-1.5">
+                        <i class="fa-solid fa-tags"></i>
+                        <span>Lista de Indicadores</span>
+                    </button>
+                </div>
+
+                <div class="mb-4">
+                    <div class="relative">
+                        <input type="text" id="inputSearchRef" oninput="renderTablaReferenciaActual()"
+                            placeholder="Buscar en hoja de referencia..."
+                            class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                    </div>
+                </div>
+
+                <div id="subcontent-clientes"
+                    class="block overflow-auto max-h-[520px] rounded-xl border border-slate-200 custom-scrollbar">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead
+                            class="bg-slate-50 text-slate-600 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+                            <tr>
+                                <th class="p-3 bg-slate-50">Cliente</th>
+                                <th class="p-3 bg-slate-50">Ciudad Asignada</th>
+                                <th class="p-3 bg-slate-50 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyClientesRef" class="divide-y divide-slate-200 bg-white">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="subcontent-indicadores"
+                    class="hidden overflow-auto max-h-[520px] rounded-xl border border-slate-200 custom-scrollbar">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead
+                            class="bg-slate-50 text-slate-600 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+                            <tr>
+                                <th class="p-3 bg-slate-50">Nombre del Indicador</th>
+                                <th class="p-3 bg-slate-50 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyIndicadoresRef" class="divide-y divide-slate-200 bg-white">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modals -->
+    <div id="modalEditTarea"
+        class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
+            <h3 class="text-base font-bold text-slate-900 border-b pb-2">Editar Tarea de Historial</h3>
+            <input type="hidden" id="editTaskId">
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label for="editTaskCliente"
+                        class="block text-xs font-semibold text-slate-700 uppercase mb-1">Cliente</label>
+                    <input type="text" id="editTaskCliente" oninput="autocompletarCiudadEditarTarea()"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs uppercase focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="editTaskCiudad"
+                        class="block text-xs font-semibold text-slate-700 uppercase mb-1">Ciudad</label>
+                    <input type="text" id="editTaskCiudad"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs uppercase focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label for="editTaskPlataforma"
+                        class="block text-xs font-semibold text-slate-700 uppercase mb-1">Plataforma</label>
+                    <select id="editTaskPlataforma"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-blue-500"></select>
+                </div>
+                <div>
+                    <label for="editTaskTipo"
+                        class="block text-xs font-semibold text-slate-700 uppercase mb-1">Tipo</label>
+                    <select id="editTaskTipo"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-blue-500">
+                        <option value="Requerimiento">Requerimiento</option>
+                        <option value="Incidencia">Incidencia</option>
+                    </select>
+                </div>
+            </div>
+            <div class="relative">
+                <label for="editTaskIndicadorSearch" class="block text-xs font-semibold text-slate-700 uppercase mb-1">Indicador</label>
+                <div class="relative">
+                    <input type="text" id="editTaskIndicadorSearch" onfocus="mostrarEditIndicadoresDropdown(true)" oninput="filtrarEditIndicadoresDropdown()" placeholder="Buscar indicador..." autocomplete="off" class="w-full pl-9 pr-8 py-2 border border-slate-300 rounded-xl text-xs uppercase focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <i class="fa-solid fa-list-check absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                    <button type="button" onclick="limpiarEditIndicadorSeleccionado()" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs p-0.5">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div id="dropdownEditIndicadores" class="hidden absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-40 overflow-y-auto custom-scrollbar"></div>
+            </div>
+            <div>
+                <label for="editTaskDescripcion"
+                    class="block text-xs font-semibold text-slate-700 uppercase mb-1">Descripción</label>
+                <textarea id="editTaskDescripcion" rows="3"
+                    class="w-full p-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+            </div>
+            <div class="flex justify-end space-x-2 pt-3 border-t">
+                <button onclick="cerrarModal('modalEditTarea')"
+                    class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl">Cancelar</button>
+                <button onclick="guardarEdicionTarea()"
+                    class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl shadow-sm">Guardar
+                    Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalConfirmAction"
+        class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center space-y-4">
+            <div class="p-3 bg-rose-100 text-rose-600 rounded-full w-12 h-12 mx-auto flex items-center justify-center">
+                <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+            </div>
+            <div>
+                <h3 id="confirmModalTitle" class="text-base font-bold text-slate-900">¿Estás seguro?</h3>
+                <p id="confirmModalMessage" class="text-xs text-slate-500 mt-1">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="flex justify-center space-x-3 pt-2">
+                <button onclick="cerrarModal('modalConfirmAction')"
+                    class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl w-1/2">Cancelar</button>
+                <button id="btnConfirmActionModal"
+                    class="px-4 py-2 bg-rose-600 text-white text-xs font-semibold rounded-xl shadow-sm w-1/2">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalEditCliente"
+        class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4">
+            <h3 class="text-base font-bold text-slate-900 border-b pb-2">Editar Cliente y Ciudad</h3>
+            <input type="hidden" id="editOriginalClientKey">
+            <div>
+                <label for="editClientName" class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nombre del
+                    Cliente</label>
+                <input type="text" id="editClientName"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs uppercase focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="editClientCity" class="block text-xs font-semibold text-slate-700 uppercase mb-1">Ciudad
+                    Asignada</label>
+                <input type="text" id="editClientCity"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs uppercase focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="flex justify-end space-x-2 pt-3">
+                <button onclick="cerrarModal('modalEditCliente')"
+                    class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl">Cancelar</button>
+                <button onclick="guardarEdicionCliente()"
+                    class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl shadow-sm">Guardar
+                    Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalAddCliente"
+        class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4">
+            <h3 class="text-base font-bold text-slate-900 border-b pb-2">Agregar Nuevo Cliente</h3>
+            <div>
+                <label for="addClientName" class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nombre del
+                    Cliente</label>
+                <input type="text" id="addClientName" placeholder="Ej: LINEA EXPRESS"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs uppercase focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="addClientCity" class="block text-xs font-semibold text-slate-700 uppercase mb-1">Ciudad
+                    Asignada</label>
+                <input type="text" id="addClientCity" placeholder="Ej: SANTIAGO"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs uppercase focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="flex justify-end space-x-2 pt-3">
+                <button onclick="cerrarModal('modalAddCliente')"
+                    class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl">Cancelar</button>
+                <button onclick="guardarNuevoCliente()"
+                    class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl shadow-sm">Agregar
+                    Cliente</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalEditIndicador"
+        class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4">
+            <h3 class="text-base font-bold text-slate-900 border-b pb-2">Editar Indicador</h3>
+            <input type="hidden" id="editOriginalIndicadorIndex">
+            <div>
+                <label for="editIndicadorName" class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nombre
+                    del Indicador</label>
+                <input type="text" id="editIndicadorName"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs uppercase focus:ring-2 focus:ring-blue-600">
+            </div>
+            <div class="flex justify-end space-x-2 pt-3">
+                <button onclick="cerrarModal('modalEditIndicador')"
+                    class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl">Cancelar</button>
+                <button onclick="guardarEdicionIndicador()"
+                    class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl shadow-sm">Guardar
+                    Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalAddIndicador"
+        class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4">
+            <h3 class="text-base font-bold text-slate-900 border-b pb-2">Agregar Nuevo Indicador</h3>
+            <div>
+                <label for="addIndicadorName" class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nombre
+                    del Indicador</label>
+                <input type="text" id="addIndicadorName" placeholder="Ej: REVISIÓN DE CÁMARAS"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs uppercase focus:ring-2 focus:ring-blue-600">
+            </div>
+            <div class="flex justify-end space-x-2 pt-3">
+                <button onclick="cerrarModal('modalAddIndicador')"
+                    class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl">Cancelar</button>
+                <button onclick="guardarNuevoIndicador()"
+                    class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl shadow-sm">Agregar
+                    Indicador</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalImportExcelTareas"
+        class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4">
+            <div class="flex items-center justify-between border-b pb-3">
+                <div class="flex items-center space-x-2">
+                    <div class="p-2 bg-emerald-100 text-emerald-700 rounded-lg">
+                        <i class="fa-solid fa-file-excel text-lg"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-900">Importar Tareas desde Archivo Excel</h3>
+                </div>
+                <button onclick="cerrarModal('modalImportExcelTareas')" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="bg-blue-50/70 border border-blue-100 p-3.5 rounded-xl text-xs text-slate-600 space-y-1">
+                <p class="font-bold text-blue-900"><i class="fa-solid fa-circle-info text-blue-600 mr-1"></i> Formato
+                    esperado (según tu Excel):</p>
+                <p
+                    class="font-mono text-[11px] bg-white px-2 py-1 rounded border border-slate-200 font-semibold text-slate-700">
+                    Col 1: CLIENTE | Col 2: CIUDAD | Col 3: PLATAFORMA | Col 4: INDICADOR | Col 5: TIPO | Col 6:
+                    DESCRIPCION | Col 7: FECHA
+                </p>
+            </div>
+
+            <div
+                class="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center bg-slate-50 hover:bg-slate-100/50 transition">
+                <input type="file" id="inputFileExcelTareas" accept=".xlsx, .xls, .csv" class="hidden"
+                    onchange="mostrarNombreArchivo(this)">
+                <label for="inputFileExcelTareas" class="cursor-pointer space-y-2 block">
+                    <div
+                        class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto text-xl shadow-sm">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <p class="text-xs font-bold text-slate-700" id="labelNombreArchivo">Haz clic para seleccionar o
+                        arrastra tu archivo Excel</p>
+                    <p class="text-[10px] text-slate-400">Formatos: .xlsx, .xls, .csv</p>
+                </label>
+            </div>
+
+            <div class="flex items-center justify-end space-x-2 pt-2 border-t">
+                <button onclick="cerrarModal('modalImportExcelTareas')"
+                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">Cancelar</button>
+                <button onclick="procesarArchivoExcelTareas()"
+                    class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-file-import"></i>
+                    <span>Cargar Tareas</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalImportExcelClientes"
+        class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
+            <div class="flex items-center justify-between border-b pb-3">
+                <div class="flex items-center space-x-2">
+                    <div class="p-2 bg-emerald-100 text-emerald-700 rounded-lg">
+                        <i class="fa-solid fa-users text-lg"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-900">Cargar Clientes Masivamente desde Excel</h3>
+                </div>
+                <button onclick="cerrarModal('modalImportExcelClientes')" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="bg-emerald-50/70 border border-emerald-100 p-3.5 rounded-xl text-xs text-slate-600 space-y-1">
+                <p class="font-bold text-emerald-900"><i class="fa-solid fa-circle-info text-emerald-600 mr-1"></i>
+                    Formato de las columnas:</p>
+                <p
+                    class="font-mono text-[11px] bg-white px-2 py-1 rounded border border-slate-200 font-semibold text-slate-700">
+                    Cliente | Ciudad
+                </p>
+            </div>
+
+            <div>
+                <label for="inputImportExcelClientesText"
+                    class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Pega los datos
+                    aquí:</label>
+                <textarea id="inputImportExcelClientesText" rows="6"
+                    placeholder="LINEA EXPRESS	SANTIAGO&#10;BUSES PACIFICO	CONCEPCION..."
+                    class="w-full p-3 border border-slate-300 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none shadow-sm"></textarea>
+            </div>
+
+            <div class="flex items-center justify-end space-x-2 pt-2 border-t">
+                <button onclick="cerrarModal('modalImportExcelClientes')"
+                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">Cancelar</button>
+                <button onclick="procesarImportExcelClientes()"
+                    class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-file-import"></i>
+                    <span>Cargar Clientes</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastNotification"
+        class="hidden fixed bottom-5 right-5 z-50 max-w-sm bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 transition-all duration-300 transform translate-y-2">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <p id="toastMessage" class="text-xs font-medium"></p>
+    </div>
+
+    <script>
+        const GOOGLE_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbywImoiovj0K81DblGd7VoMpoGOJUBs4IcL-3lGmv3KTB1Z0p91gIbZZxSff8pIQrtb/exec";
+
+        const PLATAFORMAS_LIST = [
+            "TRANSIDEA",
+            "TRANSIT",
+            "PERIMETRO",
+            "TRANSMANAGER",
+            "ANYDESK",
+            "ADMINISTRATIVO",
+            "CONFIGURACION"
+        ];
+
+        const DEFAULT_INDICADORES_LIST = [
+            "ACTUALIZACION DE PATENTE",
+            "ACTIVACION DE AVISO",
+            "ACTIVACION DE SERVICIO",
+            "SUSPENSION DE SERVICIO",
+            "ASIGNACION DE BOLETERO",
+            "CAPACITACION",
+            "CARGA PO MTT",
+            "ASIGNACION DE EQUIPO",
+            "ASIGNACION DE CTP",
+            "ASIGNACION DE PANTALLA",
+            "ACTIVACION DE VIDEO",
+            "ASIGNACION DE TARJETA ADULTO MAYOR",
+            "BAJA DE EQUIPO",
+            "CREDENCIALES",
+            "DESACTIVACION DE AVISO",
+            "IMPRESORA DE DESPACHO",
+            "INFORMACION DE SISTEMA",
+            "INSTRUCTIVO INFORME",
+            "LIMPIEZA REGISTROS",
+            "REQUERIMIENTO ADMINISTRATIVO",
+            "PERIMETRO CONTROL",
+            "REQUERIMIENTO CAMARAS",
+            "REPROCESO PERIMETRO",
+            "REPROCESO CONTADOR",
+            "UTILIDADES, CONTROLES O VARIANTES"
+        ];
+
+        let clientCityMap = {};
+        let indicadoresList = [];
+        let tareasHistory = [];
+        let activeSubTab = 'clientes';
+        let chartInstances = {};
+        let onConfirmAction = null;
+
+        window.onload = function () {
+            cargarRespaldoLocal();
+            iniciarCargaAutomatica();
+        };
+
+        function iniciarCargaAutomatica() {
+            if (!GOOGLE_SHEET_WEB_APP_URL) return;
+            const script = document.createElement('script');
+            script.src = GOOGLE_SHEET_WEB_APP_URL + "?callback=procesarDatosGoogle&_t=" + Date.now();
+            document.body.appendChild(script);
+            script.onload = () => script.remove();
+            script.onerror = () => script.remove();
+        }
+
+        window.procesarDatosGoogle = function (data) {
+            try {
+                let huboCambios = false;
+
+                if (data.tareas && Array.isArray(data.tareas)) {
+                    let tempMap = new Map();
+                    data.tareas.forEach(t => {
+                        if (!t.cliente) return;
+                        let cleanFecha = t.fecha ? String(t.fecha).trim() : '';
+                        if (cleanFecha.includes('T')) cleanFecha = cleanFecha.split('T')[0];
+                        if (cleanFecha.includes(' ')) cleanFecha = cleanFecha.split(' ')[0];
+                        cleanFecha = cleanFecha.replace(/\//g, '-');
+                        if (/^\d{4}-\d{2}-\d{2}$/.test(cleanFecha)) {
+                            const p = cleanFecha.split('-');
+                            cleanFecha = `${p[2]}-${p[1]}-${p[0]}`;
+                        }
+                        let tareaObj = { ...t, fecha: cleanFecha };
+                        tempMap.set(tareaObj.id, tareaObj);
+                    });
+                    const nuevasTareas = Array.from(tempMap.values());
+                    if (JSON.stringify(nuevasTareas) !== JSON.stringify(tareasHistory)) {
+                        tareasHistory = nuevasTareas;
+                        localStorage.setItem('vflores_tareasHistory', JSON.stringify(tareasHistory));
+                        huboCambios = true;
+                    }
+                }
+
+                if (data.clientes && Object.keys(data.clientes).length > 0) {
+                    if (JSON.stringify(data.clientes) !== JSON.stringify(clientCityMap)) {
+                        clientCityMap = data.clientes;
+                        localStorage.setItem('vflores_clientCityMap', JSON.stringify(clientCityMap));
+                        huboCambios = true;
+                    }
+                }
+
+                if (huboCambios || !window._uiInitialized) {
+                    window._uiInitialized = true;
+                    inicializarUI();
+                }
+            } catch (e) {
+                console.error("Error procesando datos remotos:", e);
+            }
+        };
+
+        function cargarRespaldoLocal() {
+            const storedHistory = localStorage.getItem('vflores_tareasHistory');
+            tareasHistory = storedHistory ? JSON.parse(storedHistory) : [];
+            const storedClients = localStorage.getItem('vflores_clientCityMap');
+            clientCityMap = storedClients ? JSON.parse(storedClients) : {
+                "BUPESA": "SANTIAGO",
+                "LINEA EXPRESS": "SANTIAGO",
+                "BUSES PACIFICO": "CONCEPCION"
+            };
+            inicializarUI();
+        }
+
+        function inicializarUI() {
+            const storedIndicadores = localStorage.getItem('vflores_indicadoresList');
+            indicadoresList = storedIndicadores ? JSON.parse(storedIndicadores) : [...DEFAULT_INDICADORES_LIST];
+
+            const selectPlat = document.getElementById('selectPlataforma');
+            selectPlat.innerHTML = PLATAFORMAS_LIST.map(p => `<option value="${p}">${p}</option>`).join('');
+
+            const selectEditPlat = document.getElementById('editTaskPlataforma');
+            selectEditPlat.innerHTML = PLATAFORMAS_LIST.map(p => `<option value="${p}">${p}</option>`).join('');
+
+            poblarFiltrosDashboard();
+            iniciarReloj();
+            actualizarConteoReferenciaSubtitulo();
+            renderTablaReferenciaActual();
+            renderTablaHistorial();
+
+            const now = new Date();
+            const d = String(now.getDate()).padStart(2, '0');
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const y = now.getFullYear();
+            const h = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('dashLastUpdate').innerText = `Última actualización ${d}/${m}/${y} ${h}:${min}`;
+
+            if (!window._eventListenersAdded) {
+                window._eventListenersAdded = true;
+                document.addEventListener('click', function (e) {
+                    const cliContainer = document.getElementById('inputClienteSearch')?.parentElement?.parentElement;
+                    if (cliContainer && !cliContainer.contains(e.target)) {
+                        document.getElementById('dropdownClientes').classList.add('hidden');
+                    }
+                    const indContainer = document.getElementById('inputIndicadorSearch')?.parentElement?.parentElement;
+                    if (indContainer && !indContainer.contains(e.target)) {
+                        document.getElementById('dropdownIndicadores').classList.add('hidden');
+                    }
+                    const editIndContainer = document.getElementById('editTaskIndicadorSearch')?.parentElement?.parentElement;
+                    if (editIndContainer && !editIndContainer.contains(e.target)) {
+                        document.getElementById('dropdownEditIndicadores').classList.add('hidden');
+                    }
+                });
+            }
+        }
+
+        function sincronizarGoogleSheets(modo = 'completo') {
+            if (!GOOGLE_SHEET_WEB_APP_URL) return;
+
+            const dataToSend = {
+                action: modo,
+                tareas: tareasHistory,
+                clientesMap: clientCityMap
+            };
+
+            fetch(GOOGLE_SHEET_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dataToSend)
+            })
+                .then(() => {
+                    mostrarToast('Sincronizado con Google Sheets correctamente.', 'success');
+                })
+                .catch(err => {
+                    console.error("Error de sincronización:", err);
+                    mostrarToast('Sincronización enviada a la nube.', 'success');
+                });
+        }
+
+        function iniciarReloj() {
+            const updateClock = () => {
+                const now = new Date();
+                const d = String(now.getDate()).padStart(2, '0');
+                const m = String(now.getMonth() + 1).padStart(2, '0');
+                const y = now.getFullYear();
+
+                let hours = now.getHours();
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                const ampm = hours >= 12 ? 'p. m.' : 'a. m.';
+                hours = hours % 12 || 12;
+                const hoursStr = String(hours).padStart(2, '0');
+
+                document.getElementById('headerClock').innerText = `${d}-${m}-${y} ${hoursStr}:${minutes}:${seconds} ${ampm}`;
+            };
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        function actualizarConteoReferenciaSubtitulo() {
+            const totalCli = Object.keys(clientCityMap).length;
+            const totalInd = indicadoresList.length;
+            const elCli = document.getElementById('refTotalClientesCount');
+            const elInd = document.getElementById('refTotalIndicadoresCount');
+            if (elCli) elCli.innerText = totalCli;
+            if (elInd) elInd.innerText = totalInd;
+        }
+
+        function switchTab(tabKey) {
+            document.querySelectorAll('.view-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = 'tab-btn px-4 py-2 rounded-lg transition-all flex items-center space-x-2 text-slate-300 hover:text-white hover:bg-white/5';
+            });
+
+            document.getElementById(`view-${tabKey}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabKey}`).className = 'tab-btn px-4 py-2 rounded-lg transition-all flex items-center space-x-2 bg-blue-600 text-white shadow-sm';
+
+            if (tabKey === 'dashboard') actualizarDashboard();
+            else if (tabKey === 'historial') renderTablaHistorial();
+            else if (tabKey === 'referencia') renderTablaReferenciaActual();
+        }
+
+        function switchSubTabReferencia(subKey) {
+            activeSubTab = subKey;
+            const tabCli = document.getElementById('subtab-clientes');
+            const tabInd = document.getElementById('subtab-indicadores');
+            const contentCli = document.getElementById('subcontent-clientes');
+            const contentInd = document.getElementById('subcontent-indicadores');
+
+            if (subKey === 'clientes') {
+                tabCli.className = 'pb-2 text-xs font-bold border-b-2 border-blue-600 text-blue-600 flex items-center space-x-1.5';
+                tabInd.className = 'pb-2 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center space-x-1.5';
+                contentCli.classList.remove('hidden');
+                contentInd.classList.add('hidden');
+            } else {
+                tabInd.className = 'pb-2 text-xs font-bold border-b-2 border-blue-600 text-blue-600 flex items-center space-x-1.5';
+                tabCli.className = 'pb-2 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center space-x-1.5';
+                contentInd.classList.remove('hidden');
+                contentCli.classList.add('hidden');
+            }
+            renderTablaReferenciaActual();
+        }
+
+        function mostrarClientesDropdown(show) {
+            const dropdown = document.getElementById('dropdownClientes');
+            if (show) {
+                filtrarClientesDropdown();
+                dropdown.classList.remove('hidden');
+            } else {
+                dropdown.classList.add('hidden');
+            }
+        }
+
+        function filtrarClientesDropdown() {
+            const query = document.getElementById('inputClienteSearch').value.trim().toUpperCase();
+            const dropdown = document.getElementById('dropdownClientes');
+            const keys = Object.keys(clientCityMap).sort();
+            const filtered = keys.filter(k => k.includes(query));
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">No se encontraron clientes</div>`;
+            } else {
+                dropdown.innerHTML = filtered.map(cli => `
+                    <div onclick="seleccionarCliente('${cli}')" class="px-3 py-2 text-xs font-medium text-slate-700 hover:bg-blue-50 cursor-pointer flex items-center justify-between border-b border-slate-50">
+                        <span>${cli}</span>
+                        <span class="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">${clientCityMap[cli]}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function seleccionarCliente(cliName) {
+            document.getElementById('inputClienteSearch').value = cliName;
+            document.getElementById('inputCiudad').value = clientCityMap[cliName] || '';
+            document.getElementById('dropdownClientes').classList.add('hidden');
+        }
+
+        function limpiarClienteSeleccionado() {
+            document.getElementById('inputClienteSearch').value = '';
+            document.getElementById('inputCiudad').value = '';
+        }
+
+        function mostrarIndicadoresDropdown(show) {
+            const dropdown = document.getElementById('dropdownIndicadores');
+            if (show) {
+                filtrarIndicadoresDropdown();
+                dropdown.classList.remove('hidden');
+            } else {
+                dropdown.classList.add('hidden');
+            }
+        }
+
+        function filtrarIndicadoresDropdown() {
+            const query = document.getElementById('inputIndicadorSearch').value.trim().toUpperCase();
+            const dropdown = document.getElementById('dropdownIndicadores');
+            const filtered = indicadoresList.filter(i => i.toUpperCase().includes(query)).sort();
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">No se encontraron indicadores</div>`;
+            } else {
+                dropdown.innerHTML = filtered.map(ind => `
+                    <div onclick="seleccionarIndicador('${ind}')" class="px-3 py-2 text-xs font-medium text-slate-700 hover:bg-blue-50 cursor-pointer border-b border-slate-50">
+                        ${ind}
+                    </div>
+                `).join('');
+            }
+        }
+
+        function seleccionarIndicador(indName) {
+            document.getElementById('inputIndicadorSearch').value = indName;
+            document.getElementById('dropdownIndicadores').classList.add('hidden');
+        }
+
+        function limpiarIndicadorSeleccionado() {
+            document.getElementById('inputIndicadorSearch').value = '';
+        }
+
+        // Funciones para el buscador desplegable de indicadores en el Modal de Edición
+        function mostrarEditIndicadoresDropdown(show) {
+            const dropdown = document.getElementById('dropdownEditIndicadores');
+            if (show) {
+                filtrarEditIndicadoresDropdown();
+                dropdown.classList.remove('hidden');
+            } else {
+                dropdown.classList.add('hidden');
+            }
+        }
+
+        function filtrarEditIndicadoresDropdown() {
+            const query = document.getElementById('editTaskIndicadorSearch').value.trim().toUpperCase();
+            const dropdown = document.getElementById('dropdownEditIndicadores');
+            const filtered = indicadoresList.filter(i => i.toUpperCase().includes(query)).sort();
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">No se encontraron indicadores</div>`;
+            } else {
+                dropdown.innerHTML = filtered.map(ind => `
+                    <div onclick="seleccionarEditIndicador('${ind}')" class="px-3 py-2 text-xs font-medium text-slate-700 hover:bg-blue-50 cursor-pointer border-b border-slate-50 uppercase">
+                        ${ind}
+                    </div>
+                `).join('');
+            }
+            dropdown.classList.remove('hidden');
+        }
+
+        function seleccionarEditIndicador(indName) {
+            document.getElementById('editTaskIndicadorSearch').value = indName;
+            document.getElementById('dropdownEditIndicadores').classList.add('hidden');
+        }
+
+        function limpiarEditIndicadorSeleccionado() {
+            document.getElementById('editTaskIndicadorSearch').value = '';
+            document.getElementById('dropdownEditIndicadores').classList.add('hidden');
+        }
+
+       function procesarIAAutoFill() {
+            const promptRaw = document.getElementById('inputIAPrompt').value;
+            if (!promptRaw || !promptRaw.trim()) {
+                mostrarToast('Ingresa una solicitud para autocompletar.', 'error');
+                return;
+            }
+
+            const singleLinePrompt = promptRaw.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+            const upperPrompt = singleLinePrompt.toUpperCase();
+
+            // 1. Detección por número explícito de línea/recorrido (Ej: "L1", "1 iquique", etc.)
+            let matchedClient = null;
+            const matchNumero = upperPrompt.match(/\b\d+\b/); 
+
+            if (matchNumero) {
+                const numeroBuscado = matchNumero[0];
+                for (const [cliName, ciudadAsignada] of Object.entries(clientCityMap)) {
+                    const cliUpper = cliName.toUpperCase();
+                    if (cliUpper.includes(numeroBuscado) && (upperPrompt.includes(ciudadAsignada) || upperPrompt.includes(cliUpper))) {
+                        matchedClient = cliName;
+                        break;
+                    }
+                }
+            }
+
+            if (!matchedClient) {
+                for (const [cliName, ciudadAsignada] of Object.entries(clientCityMap)) {
+                    if (ciudadAsignada && upperPrompt.includes(ciudadAsignada)) {
+                        if (!cliName.toUpperCase().includes('VARGAS')) {
+                            matchedClient = cliName;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!matchedClient) {
+                const sortedClients = Object.keys(clientCityMap).sort((a, b) => b.length - a.length);
+                for (const cli of sortedClients) {
+                    if (upperPrompt.includes(cli)) {
+                        matchedClient = cli;
+                        break;
+                    }
+                }
+            }
+
+            if (matchedClient && clientCityMap[matchedClient]) {
+                seleccionarCliente(matchedClient);
+            }
+
+            // 2. Diccionario de Sinónimos y Reglas Directas para Indicadores (Con prioridad en des-activaciones)
+            let matchedInd = null;
+            
+            if (upperPrompt.includes('DESACTIVAR AVISO') || upperPrompt.includes('DESACTIVACION AVISO') || (upperPrompt.includes('DESACTIVAR') && upperPrompt.includes('AVISO'))) {
+                matchedInd = "DESACTIVACION DE AVISO";
+            } else if (upperPrompt.includes('ACTIVAR AVISO') || upperPrompt.includes('ACTIVACION AVISO') || (upperPrompt.includes('ACTIVAR') && upperPrompt.includes('AVISO'))) {
+                matchedInd = "ACTIVACION DE AVISO";
+            } else if (upperPrompt.includes('BOLETERO')) {
+                matchedInd = "ASIGNACION DE BOLETERO";
+            } else if (upperPrompt.includes('GPS') || upperPrompt.includes('EQUIPO')) {
+                matchedInd = "ASIGNACION DE EQUIPO";
+            } else if (upperPrompt.includes('REPROCESO CONTADOR')) {
+                matchedInd = "REPROCESO CONTADOR";
+            } else if (upperPrompt.includes('REPROCESO')) {
+                matchedInd = "REPROCESO PERIMETRO";
+            } else if (upperPrompt.includes('CAMARA')) {
+                matchedInd = "REQUERIMIENTO CAMARAS";
+            } else {
+                let maxIndScore = 0;
+                const palabrasPrompt = upperPrompt.split(/\s+/);
+                for (const ind of indicadoresList) {
+                    const indUpper = ind.toUpperCase();
+                    if (upperPrompt.includes(indUpper)) {
+                        matchedInd = ind;
+                        break;
+                    }
+                    let scoreInd = 0;
+                    const palabrasInd = indUpper.split(/\s+/);
+                    palabrasInd.forEach(pInd => {
+                        if (pInd.length > 3 && palabrasPrompt.includes(pInd)) {
+                            scoreInd += pInd.length;
+                        }
+                    });
+                    if (scoreInd > maxIndScore) {
+                        maxIndScore = scoreInd;
+                        matchedInd = ind;
+                    }
+                }
+            }
+
+            if (matchedInd) {
+                seleccionarIndicador(matchedInd);
+            }
+
+            // 3. Reglas de Negocio para Plataforma por Contexto
+            let matchedPlat = null;
+            if (upperPrompt.includes('BOLETERO') || upperPrompt.includes('EQUIPO') || upperPrompt.includes('GPS') || upperPrompt.includes('AVISO')) {
+                matchedPlat = "TRANSIT";
+            } else if (upperPrompt.includes('REPROCESO')) {
+                matchedPlat = "PERIMETRO";
+            } else if (upperPrompt.includes('TRANSIDEA')) {
+                matchedPlat = "TRANSIDEA";
+            } else {
+                for (const plat of PLATAFORMAS_LIST) {
+                    if (upperPrompt.includes(plat)) {
+                        matchedPlat = plat;
+                        break;
+                    }
+                }
+            }
+            if (matchedPlat) {
+                document.getElementById('selectPlataforma').value = matchedPlat;
+            }
+
+            if (upperPrompt.includes('ERROR') || upperPrompt.includes('FALLA') || upperPrompt.includes('INCIDENCIA')) {
+                document.getElementById('selectTipo').value = 'Incidencia';
+            } else {
+                document.getElementById('selectTipo').value = 'Requerimiento';
+            }
+
+            document.getElementById('inputObservacion').value = singleLinePrompt;
+            mostrarToast('Auto-Fill inteligente completado.', 'success');
+        }
+
+        function guardarTarea(event) {
+            event.preventDefault();
+
+            const cliente = document.getElementById('inputClienteSearch').value.trim().toUpperCase();
+            const ciudad = document.getElementById('inputCiudad').value.trim().toUpperCase();
+            const plataforma = document.getElementById('selectPlataforma').value;
+            const indicador = document.getElementById('inputIndicadorSearch').value.trim().toUpperCase();
+            const tipo = document.getElementById('selectTipo').value;
+            const descripcion = document.getElementById('inputObservacion').value.trim();
+
+            if (!cliente || !indicador || !descripcion) {
+                mostrarToast('Completa los campos obligatorios.', 'error');
+                return;
+            }
+
+            const now = new Date();
+            const d = String(now.getDate()).padStart(2, '0');
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const y = now.getFullYear();
+            const fechaStr = `${d}-${m}-${y}`;
+
+            const duplicado = tareasHistory.some(t =>
+                t.cliente === cliente &&
+                t.plataforma === plataforma &&
+                t.indicador === indicador &&
+                t.descripcion.toLowerCase() === descripcion.toLowerCase()
+            );
+
+            if (duplicado) {
+                mostrarToast('Este requerimiento ya se encuentra registrado.', 'error');
+                return;
+            }
+
+            const nuevaTarea = {
+                id: 'TSK-' + Date.now().toString().slice(-6),
+                fecha: fechaStr,
+                cliente: cliente,
+                ciudad: ciudad || 'SIN CIUDAD',
+                plataforma: plataforma,
+                indicador: indicador,
+                tipo: tipo,
+                estado: 'Finalizado',
+                descripcion: descripcion,
+                timestamp: now.getTime()
+            };
+
+            tareasHistory.unshift(nuevaTarea);
+            localStorage.setItem('vflores_tareasHistory', JSON.stringify(tareasHistory));
+            sincronizarGoogleSheets('completo');
+
+            mostrarToast('Tarea guardada exitosamente.', 'success');
+            limpiarFormulario();
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('formTarea').reset();
+            document.getElementById('inputClienteSearch').value = '';
+            document.getElementById('inputCiudad').value = '';
+            document.getElementById('inputIndicadorSearch').value = '';
+            document.getElementById('inputIAPrompt').value = '';
+        }
+
+        function renderTablaHistorial() {
+            const tbody = document.getElementById('tbodyHistorial');
+            const filter = document.getElementById('inputFilterHistorial').value.toLowerCase().trim();
+
+            const filtered = tareasHistory.filter(t => {
+                return (t.fecha?.toLowerCase() || '').includes(filter) ||
+                    (t.cliente?.toLowerCase() || '').includes(filter) ||
+                    (t.ciudad?.toLowerCase() || '').includes(filter) ||
+                    (t.plataforma?.toLowerCase() || '').includes(filter) ||
+                    (t.indicador?.toLowerCase() || '').includes(filter) ||
+                    (t.descripcion?.toLowerCase() || '').includes(filter) ||
+                    (t.id?.toLowerCase() || '').includes(filter);
+            });
+
+            document.getElementById('contadorHistorialBadge').innerText = `Total: ${filtered.length}`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-400">No hay tareas en el historial.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(t => `
+                <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                    <td class="p-3 font-mono font-bold text-blue-600">${t.id}<br><span class="text-[10px] text-slate-400 font-normal">${t.fecha || ''}</span></td>
+                    <td class="p-3 font-semibold text-slate-800">${t.cliente}</td>
+                    <td class="p-3 text-slate-600">${t.ciudad}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700">${t.plataforma}</span></td>
+                    <td class="p-3 text-slate-700">${t.indicador}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${t.tipo === 'Incidencia' ? 'bg-rose-100 text-rose-700' : 'bg-blue-100 text-blue-700'}">${t.tipo}</span></td>
+                    <td class="p-3 text-slate-600 max-w-xs truncate" title="${t.descripcion}">${t.descripcion}</td>
+                    <td class="p-3 text-center space-x-1">
+                        <button onclick="abrirModalEditarTarea('${t.id}')" class="p-1.5 text-blue-600"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="confirmarEliminarTarea('${t.id}')" class="p-1.5 text-slate-400 hover:text-rose-600"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function abrirModalEditarTarea(id) {
+            const tarea = tareasHistory.find(t => t.id === id);
+            if (!tarea) return;
+
+            document.getElementById('editTaskId').value = tarea.id;
+            document.getElementById('editTaskCliente').value = tarea.cliente;
+            document.getElementById('editTaskCiudad').value = tarea.ciudad;
+            document.getElementById('editTaskPlataforma').value = tarea.plataforma;
+            document.getElementById('editTaskTipo').value = tarea.tipo;
+            document.getElementById('editTaskIndicadorSearch').value = tarea.indicador;
+            document.getElementById('editTaskDescripcion').value = tarea.descripcion;
+
+            document.getElementById('modalEditTarea').classList.remove('hidden');
+        }
+
+        function autocompletarCiudadEditarTarea() {
+            const cli = document.getElementById('editTaskCliente').value.trim().toUpperCase();
+            if (clientCityMap[cli]) {
+                document.getElementById('editTaskCiudad').value = clientCityMap[cli];
+            }
+        }
+
+        function guardarEdicionTarea() {
+            const id = document.getElementById('editTaskId').value;
+            const idx = tareasHistory.findIndex(t => t.id === id);
+            if (idx === -1) return;
+
+            const indicadorSeleccionado = document.getElementById('editTaskIndicadorSearch').value.trim().toUpperCase();
+            if (!indicadorSeleccionado) {
+                mostrarToast('Debes seleccionar un indicador.', 'error');
+                return;
+            }
+
+            tareasHistory[idx].cliente = document.getElementById('editTaskCliente').value.trim().toUpperCase();
+            tareasHistory[idx].ciudad = document.getElementById('editTaskCiudad').value.trim().toUpperCase();
+            tareasHistory[idx].plataforma = document.getElementById('editTaskPlataforma').value;
+            tareasHistory[idx].tipo = document.getElementById('editTaskTipo').value;
+            tareasHistory[idx].indicador = indicadorSeleccionado;
+            tareasHistory[idx].descripcion = document.getElementById('editTaskDescripcion').value.trim();
+
+            localStorage.setItem('vflores_tareasHistory', JSON.stringify(tareasHistory));
+            sincronizarGoogleSheets('completo');
+            cerrarModal('modalEditTarea');
+            renderTablaHistorial();
+            mostrarToast('Tarea actualizada correctamente.', 'success');
+        }
+
+        function abrirModalConfirmacion(titulo, mensaje, callback) {
+            document.getElementById('confirmModalTitle').innerText = titulo;
+            document.getElementById('confirmModalMessage').innerText = mensaje;
+            onConfirmAction = callback;
+            document.getElementById('btnConfirmActionModal').onclick = function () {
+                if (onConfirmAction) onConfirmAction();
+                cerrarModal('modalConfirmAction');
+            };
+            document.getElementById('modalConfirmAction').classList.remove('hidden');
+        }
+
+        function confirmarEliminarTarea(id) {
+            abrirModalConfirmacion('¿Eliminar Registro?', `¿Estás segura de eliminar el registro ${id}?`, function () {
+                tareasHistory = tareasHistory.filter(t => t.id !== id);
+                localStorage.setItem('vflores_tareasHistory', JSON.stringify(tareasHistory));
+                sincronizarGoogleSheets('completo');
+                renderTablaHistorial();
+                mostrarToast('Registro eliminado correctamente.', 'info');
+            });
+        }
+
+        function copiarTablaHistorial() {
+            if (tareasHistory.length === 0) return mostrarToast('No hay datos.', 'error');
+            let text = "ID\tFecha\tCliente\tCiudad\tPlataforma\tIndicador\tTipo\tDescripción\n";
+            tareasHistory.forEach(t => {
+                text += `${t.id}\t${t.fecha}\t${t.cliente}\t${t.ciudad}\t${t.plataforma}\t${t.indicador}\t${t.tipo}\t${t.descripcion}\n`;
+            });
+            navigator.clipboard.writeText(text);
+            mostrarToast('Tabla copiada al portapapeles.', 'success');
+        }
+
+        function exportarCSVHistorial() {
+            if (tareasHistory.length === 0) return mostrarToast('No hay datos.', 'error');
+            let csv = "ID,Fecha,Cliente,Ciudad,Plataforma,Indicador,Tipo,Estado,Descripcion\n";
+            tareasHistory.forEach(t => {
+                csv += `"${t.id}","${t.fecha}","${t.cliente}","${t.ciudad}","${t.plataforma}","${t.indicador}","${t.tipo}","${t.estado}","${t.descripcion.replace(/"/g, '""')}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', `historial_${Date.now()}.csv`);
+            link.click();
+            mostrarToast('Archivo CSV generado.', 'success');
+        }
+
+        function abrirModalImportExcelTareas() {
+            document.getElementById('inputFileExcelTareas').value = '';
+            document.getElementById('labelNombreArchivo').innerText = 'Haz clic para seleccionar tu archivo';
+            document.getElementById('modalImportExcelTareas').classList.remove('hidden');
+        }
+
+        function mostrarNombreArchivo(input) {
+            if (input.files?.[0]) document.getElementById('labelNombreArchivo').innerText = input.files[0].name;
+        }
+
+        function parsearFechaExcelCelda(val) {
+            if (val === undefined || val === null || val === '') return null;
+
+            if (val instanceof Date && !isNaN(val.getTime())) {
+                const d = String(val.getDate()).padStart(2, '0');
+                const m = String(val.getMonth() + 1).padStart(2, '0');
+                const y = val.getFullYear();
+                return `${d}-${m}-${y}`;
+            }
+
+            if (typeof val === 'number') {
+                const utc_days = Math.floor(val - 25569);
+                const utc_value = utc_days * 86400;
+                const date_info = new Date(utc_value * 1000);
+                if (!isNaN(date_info.getTime())) {
+                    const d = String(date_info.getUTCDate()).padStart(2, '0');
+                    const m = String(date_info.getUTCMonth() + 1).padStart(2, '0');
+                    const y = date_info.getUTCFullYear();
+                    return `${d}-${m}-${y}`;
+                }
+            }
+
+            let str = String(val).trim().split('T')[0].split(' ')[0];
+            let partes = str.split(/[-/.]/);
+
+            if (partes.length === 3) {
+                let p0 = partes[0], p1 = partes[1], p2 = partes[2];
+                if (p0.length === 4) {
+                    return `${p2.padStart(2, '0')}-${p1.padStart(2, '0')}-${p0}`;
+                }
+                let year = p2;
+                if (year.length === 2) year = '20' + year;
+                return `${p0.padStart(2, '0')}-${p1.padStart(2, '0')}-${year}`;
+            }
+
+            return null;
+        }
+
+        function procesarArchivoExcelTareas() {
+            const fileInput = document.getElementById('inputFileExcelTareas');
+            if (!fileInput.files?.[0]) return mostrarToast('Adjunta un archivo Excel.', 'error');
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+
+                    let countTareas = 0;
+                    let countClientesNuevos = 0;
+                    const now = new Date();
+                    const defaultDateStr = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
+
+                    rows.forEach((cols, index) => {
+                        if (!cols || cols.length === 0) return;
+                        if (index === 0 && (String(cols[0]).toUpperCase().includes('CLIENTE') || String(cols[6]).toUpperCase().includes('FECHA'))) return;
+
+                        const cliente = cols[0] ? String(cols[0]).trim().toUpperCase() : '';
+                        if (!cliente) return;
+
+                        const ciudadExcel = cols[1] ? String(cols[1]).trim().toUpperCase() : '';
+
+                        if (ciudadExcel && clientCityMap[cliente] !== ciudadExcel) {
+                            clientCityMap[cliente] = ciudadExcel;
+                            countClientesNuevos++;
+                        } else if (!clientCityMap[cliente]) {
+                            clientCityMap[cliente] = 'SANTIAGO';
+                            countClientesNuevos++;
+                        }
+
+                        const plataforma = PLATAFORMAS_LIST.includes(String(cols[2]).toUpperCase()) ? String(cols[2]).toUpperCase() : 'TRANSIT';
+                        const indicador = cols[3] ? String(cols[3]).trim().toUpperCase() : 'INFORMACION GENERAL';
+                        const tipoStr = cols[4] ? String(cols[4]) : 'Requerimiento';
+                        const descripcion = cols[5] ? String(cols[5]).trim() : 'Carga archivo Excel';
+
+                        let fechaTarea = parsearFechaExcelCelda(cols[6]) || defaultDateStr;
+
+                        const existe = tareasHistory.some(t =>
+                            t.cliente === cliente &&
+                            t.plataforma === plataforma &&
+                            t.indicador === indicador &&
+                            t.descripcion.toLowerCase() === descripcion.toLowerCase() &&
+                            t.fecha === fechaTarea
+                        );
+
+                        if (!existe) {
+                            tareasHistory.unshift({
+                                id: 'TSK-' + (Date.now() + index).toString().slice(-6),
+                                fecha: fechaTarea,
+                                cliente: cliente,
+                                ciudad: clientCityMap[cliente],
+                                plataforma: plataforma,
+                                indicador: indicador,
+                                tipo: tipoStr.toLowerCase().includes('incidencia') ? 'Incidencia' : 'Requerimiento',
+                                estado: 'Finalizado',
+                                descripcion: descripcion,
+                                timestamp: now.getTime() + index
+                            });
+                            countTareas++;
+                        }
+                    });
+
+                    if (countTareas > 0 || countClientesNuevos > 0) {
+                        localStorage.setItem('vflores_tareasHistory', JSON.stringify(tareasHistory));
+                        localStorage.setItem('vflores_clientCityMap', JSON.stringify(clientCityMap));
+
+                        sincronizarGoogleSheets('completo');
+                        cerrarModal('modalImportExcelTareas');
+                        renderTablaHistorial();
+                        renderTablaReferenciaActual();
+                        poblarFiltrosDashboard();
+
+                        mostrarToast(`Se importaron ${countTareas} tareas y se actualizaron ${countClientesNuevos} clientes.`, 'success');
+                    } else {
+                        mostrarToast('No se agregaron tareas ni clientes nuevos.', 'info');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    mostrarToast('Error al leer el archivo Excel.', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(fileInput.files[0]);
+        }
+
+        function abrirModalImportExcelClientes() {
+            document.getElementById('inputImportExcelClientesText').value = '';
+            document.getElementById('modalImportExcelClientes').classList.remove('hidden');
+        }
+
+        function procesarImportExcelClientes() {
+            const rawText = document.getElementById('inputImportExcelClientesText').value.trim();
+            if (!rawText) return mostrarToast('Pega los datos.', 'error');
+
+            const lines = rawText.split(/\r?\n/);
+            let count = 0;
+            lines.forEach((line, index) => {
+                let cols = line.split('\t');
+                if (cols.length < 2) cols = line.split(';');
+                if (cols.length < 2) cols = line.split(',');
+                if (index === 0 && cols[0]?.toUpperCase().includes('CLIENTE')) return;
+                if (cols[0]?.trim()) {
+                    const cName = cols[0].trim().toUpperCase();
+                    clientCityMap[cName] = cols[1] ? cols[1].trim().toUpperCase() : 'SANTIAGO';
+                    count++;
+                }
+            });
+
+            if (count > 0) {
+                localStorage.setItem('vflores_clientCityMap', JSON.stringify(clientCityMap));
+                sincronizarGoogleSheets('completo');
+                cerrarModal('modalImportExcelClientes');
+                renderTablaReferenciaActual();
+                poblarFiltrosDashboard();
+                mostrarToast(`Se importaron ${count} clientes.`, 'success');
+            }
+        }
+
+        function renderTablaReferenciaActual() {
+            actualizarConteoReferenciaSubtitulo();
+            if (activeSubTab === 'clientes') renderTablaClientesRef();
+            else renderTablaIndicadoresRef();
+        }
+
+        function renderTablaClientesRef() {
+            const tbody = document.getElementById('tbodyClientesRef');
+            const search = document.getElementById('inputSearchRef').value.trim().toUpperCase();
+            const keys = Object.keys(clientCityMap).filter(k => k.includes(search) || clientCityMap[k].includes(search)).sort();
+
+            if (keys.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-slate-400">No se encontraron clientes.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = keys.map(cli => `
+                <tr class="hover:bg-slate-50 border-b border-slate-100">
+                    <td class="p-3 font-semibold text-slate-800">${cli}</td>
+                    <td class="p-3 text-slate-600">${clientCityMap[cli]}</td>
+                    <td class="p-3 text-center space-x-2">
+                        <button onclick="abrirModalEditarCliente('${cli}')" class="p-1.5 text-blue-600"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="confirmarEliminarClienteRef('${cli}')" class="p-1.5 text-slate-400 hover:text-rose-600"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderTablaIndicadoresRef() {
+            const tbody = document.getElementById('tbodyIndicadoresRef');
+            const search = document.getElementById('inputSearchRef').value.trim().toUpperCase();
+            const filtered = indicadoresList.filter(i => i.toUpperCase().includes(search)).sort();
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" class="p-6 text-center text-slate-400">No se encontraron indicadores.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(ind => `
+                <tr class="hover:bg-slate-50 border-b border-slate-100">
+                    <td class="p-3 font-semibold text-slate-800">${ind}</td>
+                    <td class="p-3 text-center space-x-2">
+                        <button onclick="abrirModalEditarIndicador('${ind}')" class="p-1.5 text-blue-600"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="confirmarEliminarIndicadorRef('${ind}')" class="p-1.5 text-slate-400 hover:text-rose-600"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function abrirModalEditarCliente(cliKey) {
+            document.getElementById('editOriginalClientKey').value = cliKey;
+            document.getElementById('editClientName').value = cliKey;
+            document.getElementById('editClientCity').value = clientCityMap[cliKey] || '';
+            document.getElementById('modalEditCliente').classList.remove('hidden');
+        }
+
+        function guardarEdicionCliente() {
+            const origKey = document.getElementById('editOriginalClientKey').value;
+            const newName = document.getElementById('editClientName').value.trim().toUpperCase();
+            const newCity = document.getElementById('editClientCity').value.trim().toUpperCase();
+            if (!newName || !newCity) return mostrarToast('Completa los campos.', 'error');
+
+            if (origKey !== newName) delete clientCityMap[origKey];
+            clientCityMap[newName] = newCity;
+
+            localStorage.setItem('vflores_clientCityMap', JSON.stringify(clientCityMap));
+            sincronizarGoogleSheets('completo');
+            cerrarModal('modalEditCliente');
+            renderTablaClientesRef();
+            poblarFiltrosDashboard();
+            mostrarToast('Cliente actualizado.', 'success');
+        }
+
+        function confirmarEliminarClienteRef(cliKey) {
+            abrirModalConfirmacion('¿Eliminar Cliente?', `¿Deseas eliminar a "${cliKey}"?`, function () {
+                delete clientCityMap[cliKey];
+                localStorage.setItem('vflores_clientCityMap', JSON.stringify(clientCityMap));
+                sincronizarGoogleSheets('completo');
+                renderTablaClientesRef();
+                poblarFiltrosDashboard();
+                mostrarToast('Cliente eliminado.', 'info');
+            });
+        }
+
+        function abrirModalAgregarCliente() {
+            document.getElementById('addClientName').value = '';
+            document.getElementById('addClientCity').value = '';
+            document.getElementById('modalAddCliente').classList.remove('hidden');
+        }
+
+        function guardarNuevoCliente() {
+            const name = document.getElementById('addClientName').value.trim().toUpperCase();
+            const city = document.getElementById('addClientCity').value.trim().toUpperCase();
+            if (!name || !city) return mostrarToast('Completa los campos.', 'error');
+
+            clientCityMap[name] = city;
+            localStorage.setItem('vflores_clientCityMap', JSON.stringify(clientCityMap));
+            sincronizarGoogleSheets('completo');
+            cerrarModal('modalAddCliente');
+            renderTablaClientesRef();
+            poblarFiltrosDashboard();
+            mostrarToast('Cliente agregado.', 'success');
+        }
+
+        function abrirModalEditarIndicador(indName) {
+            document.getElementById('editOriginalIndicadorIndex').value = indName;
+            document.getElementById('editIndicadorName').value = indName;
+            document.getElementById('modalEditIndicador').classList.remove('hidden');
+        }
+
+        function guardarEdicionIndicador() {
+            const origName = document.getElementById('editOriginalIndicadorIndex').value;
+            const newName = document.getElementById('editIndicadorName').value.trim().toUpperCase();
+            if (!newName) return;
+
+            const idx = indicadoresList.indexOf(origName);
+            if (idx !== -1) indicadoresList[idx] = newName;
+            else indicadoresList.push(newName);
+
+            localStorage.setItem('vflores_indicadoresList', JSON.stringify(indicadoresList));
+            cerrarModal('modalEditIndicador');
+            renderTablaIndicadoresRef();
+            mostrarToast('Indicador actualizado.', 'success');
+        }
+
+        function confirmarEliminarIndicadorRef(indName) {
+            abrirModalConfirmacion('¿Eliminar Indicador?', `¿Deseas eliminar "${indName}"?`, function () {
+                indicadoresList = indicadoresList.filter(i => i !== indName);
+                localStorage.setItem('vflores_indicadoresList', JSON.stringify(indicadoresList));
+                renderTablaIndicadoresRef();
+                mostrarToast('Indicador eliminado.', 'info');
+            });
+        }
+
+        function abrirModalAgregarIndicador() {
+            document.getElementById('addIndicadorName').value = '';
+            document.getElementById('modalAddIndicador').classList.remove('hidden');
+        }
+
+        function guardarNuevoIndicador() {
+            const name = document.getElementById('addIndicadorName').value.trim().toUpperCase();
+            if (!name) return;
+            if (!indicadoresList.includes(name)) {
+                indicadoresList.push(name);
+                localStorage.setItem('vflores_indicadoresList', JSON.stringify(indicadoresList));
+            }
+            cerrarModal('modalAddIndicador');
+            renderTablaIndicadoresRef();
+            mostrarToast('Indicador agregado.', 'success');
+        }
+
+        function cerrarModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function poblarFiltrosDashboard() {
+            document.getElementById('dashFilterPlataforma').innerHTML = '<option value="Todas">Todas</option>' + PLATAFORMAS_LIST.map(p => `<option value="${p}">${p}</option>`).join('');
+            document.getElementById('dashFilterCiudad').innerHTML = '<option value="Todas">Todas</option>' + [...new Set(Object.values(clientCityMap))].sort().map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('dashFilterCliente').innerHTML = '<option value="Todas">Todas</option>' + Object.keys(clientCityMap).sort().map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        function parsearFechaLocal(strFecha) {
+            if (!strFecha) return null;
+            let limpio = String(strFecha).trim().split('T')[0].split(' ')[0].replace(/\//g, '-');
+            const partes = limpio.split('-');
+            if (partes.length === 3) {
+                if (partes[0].length === 4) return new Date(Date.UTC(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2])));
+                return new Date(Date.UTC(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0])));
+            }
+            return new Date(limpio);
+        }
+
+        function actualizarDashboard() {
+            const fPlat = document.getElementById('dashFilterPlataforma').value;
+            const fCity = document.getElementById('dashFilterCiudad').value;
+            const fCli = document.getElementById('dashFilterCliente').value;
+            const fDesde = document.getElementById('dashFilterFechaDesde').value;
+            const fHasta = document.getElementById('dashFilterFechaHasta').value;
+
+            const desdeObj = fDesde ? new Date(fDesde + "T00:00:00Z") : null;
+            const hastaObj = fHasta ? new Date(fHasta + "T23:59:59Z") : null;
+
+            const filtered = tareasHistory.filter(t => {
+                if (fPlat !== 'Todas' && t.plataforma !== fPlat) return false;
+                if (fCity !== 'Todas' && t.ciudad !== fCity) return false;
+                if (fCli !== 'Todas' && t.cliente !== fCli) return false;
+                if (desdeObj || hastaObj) {
+                    const tDate = parsearFechaLocal(t.fecha);
+                    if (!tDate || isNaN(tDate.getTime())) return false;
+                    if (desdeObj && tDate.getTime() < desdeObj.getTime()) return false;
+                    if (hastaObj && tDate.getTime() > hastaObj.getTime()) return false;
+                }
+                return true;
+            });
+
+            document.getElementById('kpiTotalCasos').innerText = filtered.length;
+            document.getElementById('kpiTotalCiudades').innerText = new Set(filtered.map(t => t.ciudad)).size;
+            document.getElementById('kpiTotalPlataformas').innerText = PLATAFORMAS_LIST.length;
+            document.getElementById('kpiTotalClientes').innerText = Object.keys(clientCityMap).length;
+
+            renderCharts(filtered);
+        }
+
+        function renderCharts(data) {
+            const cliCounts = {}, cityCounts = {}, platCounts = {}, indCounts = {}, timeCounts = {};
+            const mesesNombres = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+
+            data.forEach(t => {
+                cliCounts[t.cliente] = (cliCounts[t.cliente] || 0) + 1;
+                cityCounts[t.ciudad] = (cityCounts[t.ciudad] || 0) + 1;
+                platCounts[t.plataforma] = (platCounts[t.plataforma] || 0) + 1;
+                indCounts[t.indicador] = (indCounts[t.indicador] || 0) + 1;
+
+                let mesAnoKey = t.fecha;
+                const partes = t.fecha ? t.fecha.split(/[-/]/) : [];
+                if (partes.length === 3) {
+                    let y = partes[0].length === 4 ? partes[0] : partes[2];
+                    let m = parseInt(partes[1], 10) - 1;
+                    if (m >= 0 && m < 12) mesAnoKey = `${mesesNombres[m]} ${y}`;
+                }
+                timeCounts[mesAnoKey] = (timeCounts[mesAnoKey] || 0) + 1;
+            });
+
+            const permanentLabelsPlugin = {
+                id: 'permanentLabels',
+                afterDatasetsDraw(chart) {
+                    const { ctx } = chart;
+                    chart.data.datasets.forEach((dataset, i) => {
+                        chart.getDatasetMeta(i).data.forEach((bar, index) => {
+                            const val = dataset.data[index];
+                            if (val !== undefined && val !== null) {
+                                ctx.fillStyle = '#334155';
+                                ctx.font = 'bold 10px Inter, sans-serif';
+                                ctx.textBaseline = 'middle';
+                                if (chart.config.options.indexAxis === 'y') {
+                                    ctx.textAlign = 'left';
+                                    ctx.fillText(val, bar.x + 4, bar.y);
+                                } else {
+                                    ctx.textAlign = 'center';
+                                    ctx.fillText(val, bar.x, bar.y + -6);
+                                }
+                            }
+                        });
+                    });
+                }
+            };
+
+            const sortedCli = Object.entries(cliCounts).sort((a, b) => b[1] - a[1]);
+            const sortedCity = Object.entries(cityCounts).sort((a, b) => b[1] - a[1]);
+            const sortedPlat = Object.entries(platCounts).sort((a, b) => b[1] - a[1]);
+            const sortedInd = Object.entries(indCounts).sort((a, b) => b[1] - a[1]);
+
+            updateScrollableChart('wrapChartClientes', 'innerChartClientes', 'chartClientes', 'bar', {
+                labels: sortedCli.length ? sortedCli.map(x => x[0]) : ['Sin datos'],
+                datasets: [{ label: 'Casos', data: sortedCli.length ? sortedCli.map(x => x[1]) : [0], backgroundColor: '#2563eb', borderRadius: 3 }]
+            }, { indexAxis: 'y' }, [permanentLabelsPlugin]);
+
+            updateScrollableChart('wrapChartCiudades', 'innerChartCiudades', 'chartCiudades', 'bar', {
+                labels: sortedCity.length ? sortedCity.map(x => x[0]) : ['Sin datos'],
+                datasets: [{ label: 'Casos', data: sortedCity.length ? sortedCity.map(x => x[1]) : [0], backgroundColor: '#2563eb', borderRadius: 3 }]
+            }, { indexAxis: 'y' }, [permanentLabelsPlugin]);
+
+            updateScrollableChart('wrapChartPlataformas', 'innerChartPlataformas', 'chartPlataformas', 'doughnut', {
+                labels: sortedPlat.length ? sortedPlat.map(x => x[0]) : ['Sin datos'],
+                datasets: [{ data: sortedPlat.length ? sortedPlat.map(x => x[1]) : [1], backgroundColor: ['#2563eb', '#7c3aed', '#db2777', '#059669', '#d97706', '#0284c7', '#475569'] }]
+            }, {}, []);
+
+            updateScrollableChart('wrapChartIndicadores', 'innerChartIndicadores', 'chartIndicadores', 'bar', {
+                labels: sortedInd.length ? sortedInd.map(x => x[0]) : ['Sin datos'],
+                datasets: [{ label: 'Casos', data: sortedInd.length ? sortedInd.map(x => x[1]) : [0], backgroundColor: '#2563eb', borderRadius: 3 }]
+            }, { indexAxis: 'y' }, [permanentLabelsPlugin]);
+
+            const timeSortedKeys = Object.keys(timeCounts).sort((a, b) => {
+                const [mA, aA] = a.split(' '), [mB, aB] = b.split(' ');
+                if (aA !== aB) return parseInt(aA) - parseInt(aB);
+                return mesesNombres.indexOf(mA) - mesesNombres.indexOf(mB);
+            });
+
+            createOrUpdateChart('chartTiempo', 'line', {
+                labels: timeSortedKeys.length ? timeSortedKeys : ['Sin datos'],
+                datasets: [{ label: 'Total Casos', data: timeSortedKeys.length ? timeSortedKeys.map(k => timeCounts[k]) : [0], borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.08)', fill: true, tension: 0.3 }]
+            }, { plugins: { legend: { display: false } } }, [permanentLabelsPlugin]);
+        }
+
+        function updateScrollableChart(wrapperId, innerId, canvasId, type, chartData, customOptions = {}, plugins = []) {
+            const inner = document.getElementById(innerId);
+            if (!inner) return;
+            inner.style.height = (type === 'doughnut' ? 240 : Math.max(220, chartData.labels.length * 28)) + 'px';
+            createOrUpdateChart(canvasId, type, chartData, customOptions, plugins);
+        }
+
+        function createOrUpdateChart(canvasId, type, chartData, customOptions = {}, pluginsList = []) {
+            const canvasEl = document.getElementById(canvasId);
+            if (!canvasEl) return;
+            if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+
+            chartInstances[canvasId] = new Chart(canvasEl.getContext('2d'), {
+                type: type,
+                data: chartData,
+                plugins: pluginsList,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: type === 'doughnut', position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } },
+                    scales: type === 'doughnut' ? {} : {
+                        x: { grid: { display: false }, ticks: { font: { size: 9 } } },
+                        y: { grid: { display: true, color: '#f8fafc' }, ticks: { font: { size: 9 }, precision: 0 } }
+                    },
+                    ...customOptions
+                }
+            });
+        }
+
+        function mostrarToast(mensaje, tipo = 'info') {
+            const container = document.getElementById('toastNotification');
+            document.getElementById('toastMessage').innerText = mensaje;
+            document.getElementById('toastIcon').className = tipo === 'success' ? 'fa-solid fa-circle-check text-emerald-400 text-lg' : tipo === 'error' ? 'fa-solid fa-circle-xmark text-rose-400 text-lg' : 'fa-solid fa-circle-info text-sky-400 text-lg';
+            container.classList.remove('hidden', 'translate-y-2');
+            setTimeout(() => container.classList.add('hidden', 'translate-y-2'), 3500);
+        }
+    </script>
+</body>
+
+</html>
